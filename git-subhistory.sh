@@ -21,11 +21,11 @@ test $# = 0 && set -- -h
 
 OPTS_SPEC="\
 git-subhistory split <subproj-path> (-b | -B) <subproj-branch>
-git-subhistory merge <subproj-path> (-a) <subproj-branch>
+git-subhistory merge <subproj-path> <subproj-branch> [--no-edit]
 --
 q,quiet         be quiet
 v,verbose       be verbose
-a,auto          use auto-generated commit message without prompting user
+no-edit         use auto-generated commit message without prompting user
 h               show the help
 
  options for 'split':
@@ -39,7 +39,7 @@ quiet="$GIT_QUIET"
 verbose=
 newbranch=
 force_newbranch=
-auto=
+edit_option=--edit
 
 while test $# != 0
 do
@@ -48,8 +48,7 @@ do
 	--no-quiet) quiet= ;;
 	-v|--verbose) verbose=1 ;;
 	--no-verbose) verbose= ;;
-        -a|--auto) auto=1 ;;
-        --no-auto) auto= ;;
+        --no-edit) edit_option=--no-edit ;;
 	-b|-B)
 		test "$1" = "-B" && force_newbranch=-f
 		shift
@@ -297,7 +296,6 @@ subhistory_assimilate () {
 }
 
 subhistory_merge () {
-	edit_option=$(test $auto || echo "--edit")
 	mkdir -p "./$GIT_PREFIX/$1" &&
 	subhistory_assimilate "$@" &&
 	say &&
