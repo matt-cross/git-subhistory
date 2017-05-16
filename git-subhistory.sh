@@ -111,7 +111,7 @@ get_path_to_sub () {
 # Subcommands
 
 # TODO: find a better place to put this
-commit_filter='git commit-tree "$@"' # default/noop
+commit_filter='git mec-commit-tree "$@"' # default/noop
 
 subhistory_split () {
 	test $# = 1 || usage "wrong number of arguments to 'split'"
@@ -132,7 +132,7 @@ subhistory_split () {
 		elaborate "Set detached SPLIT_HEAD"
 	fi
 
-	git filter-branch \
+	git mec-filter-branch \
 		--original subhistory-tmp/filter-branch-backup \
 		--subdirectory-filter "$path_to_sub" \
 		--commit-filter "$commit_filter" \
@@ -168,11 +168,13 @@ subhistory_assimilate () {
 	then
 		# split HEAD
 		mkdir "$GIT_DIR/subhistory-tmp/split-to-orig-map" || exit $?
+                orig_commit_filter=$commit_filter
 		commit_filter='
-			rewritten=$(git commit-tree "$@") &&
+			rewritten=$(git mec-commit-tree "$@") &&
 			echo $GIT_COMMIT > "$GIT_DIR/subhistory-tmp/split-to-orig-map/$rewritten" &&
 			echo $rewritten'
 		subhistory_split "$1" || exit $?
+                commit_filter=$orig_commit_filter
 		say # blank line after summary of subhistory_split
 
 		# build the synthetic commits on top of the original Main commits, by
@@ -276,10 +278,11 @@ subhistory_assimilate () {
 
         if test $commit_count -ne 0
         then
-	    git filter-branch \
+	    git mec-filter-branch \
 		--original subhistory-tmp/filter-branch-backup \
 		--parent-filter "$parent_filter" \
 		--index-filter "$index_filter"  \
+                --commit-filter "$commit_filter" \
 		-- $revs_to_rewrite \
 	        2>&1 | say_stdin || exit $?
 
